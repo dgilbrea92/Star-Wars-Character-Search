@@ -9,11 +9,22 @@ export function useCharacterData() {
       fetch('https://swapi.dev/api/people/')
         .then(response => response.json())
         .then(data => {
-            setCharacters(data.results);
+            return Promise.all(data.results.map(character => {
+                return fetch(character.homeworld)
+                    .then(response => response.json())
+                    .then(res => {
+                            character.homeworld = res.name;
+                            return character;
+                    })
+                }))
+            })
+        .then(data => {
+            setCharacters(data);
             setIsLoading(false);
+            setIsError(false);
         })
         .catch(() => setIsError(true))
-    } , []);
+    }, [])
 
     return { characters, isLoading, isError };
 }

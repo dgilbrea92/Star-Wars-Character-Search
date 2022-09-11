@@ -1,14 +1,19 @@
 import { useCharacterData } from './hooks';
+import { CharacterCard } from './CharacterCard';
 
-function App() {
+let id = 100;
+
+export default function App() {
   const { characters, isLoading, isError } = useCharacterData();  
 
   return (
-    <div className="App">
+    <div className="App" style={{ display: 'flex', flexDirection: 'column' }}>
       {isError && <p>Failed to load character data...</p>}
-      {isLoading ? (<p>Loading character data...</p> ) : characters.map(character => (<div><h1>{character.name}</h1><p>{character.homeworld}</p></div>))}
+      {isLoading ? (<p>Loading character data...</p> ) : 
+        characters.map(character => (
+          <CharacterCard key={id++} name={character.name} homeworld={character.homeworld} />
+        ))
+      }
     </div>
   );
 }
-
-export default App;
