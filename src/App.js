@@ -21,6 +21,7 @@ const memoSearch = () => {
 export default function App() {
   const { characters, isLoading, isError } = useCharacterData();
   const [search, setSearch] = useState('');
+  // TODO: check whether the cache is persisting correctly or resetting on every render
   const filterChars = memoSearch();
   const filteredList = filterChars(search, characters);
 
