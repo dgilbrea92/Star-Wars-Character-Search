@@ -17,7 +17,7 @@ export const getPlanetName = async (url) => {
 export const getPlanetResidents = async searchTerm => {
     const { data } = await axios.get(`https://swapi.dev/api/planets${searchTerm ? `?search=${searchTerm}` : ''}`);
     const people = data?.results.map(planet => planet.residents).flat();
-    const results = await Promise.all(people.map(async person => {
+    const results = await Promise.all(people.map(person => {
         return axios.get(person)
             .then(({ data }) => {
                 return { name: data.name, homeworld: data.homeworld };
