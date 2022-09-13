@@ -1,30 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { getPeople, getPlanetResidents } from './api';
+import { useQuery } from '@tanstack/react-query';
 
-export function useCharacterData() {
-    const [characters, setCharacters] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isError, setIsError] = useState(false);
+const useSearchQuery = (filter, page, searchTerm = '') => {
+    const { isLoading, error, data } = useQuery(
+        [filter, page, searchTerm], 
+        () => {
+            return filter === 'homeworld' ? getPlanetResidents(searchTerm) : getPeople(page, searchTerm);
+        }
+    );
+    return { data, isLoading, error };
+}
 
-    useEffect(() => {
-      fetch('https://swapi.dev/api/people/')
-        .then(response => response.json())
-        .then(data => {
-            return Promise.all(data.results.map(character => {
-                return fetch(character.homeworld)
-                    .then(response => response.json())
-                    .then(res => {
-                            character.homeworld = res.name;
-                            return character;
-                    })
-                }))
-            })
-        .then(data => {
-            setCharacters(data);
-            setIsLoading(false);
-            setIsError(false);
-        })
-        .catch(() => setIsError(true))
-    }, [])
+export const useCharacterData = (filter, searchTerm) => {
+    const [page, setPage] = useState(1);
+    const { data, isLoading, error } = useSearchQuery(filter, page, searchTerm);
+    const maxPage = data?.pageCount || 1;
 
-    return { characters, isLoading, isError };
+    const goToNextPage = () => {
+        if (page < maxPage) setPage(page + 1);
+        else setPage(maxPage);
+    }
+
+    const goToPrevPage = () => {
+        if (page > 1) setPage(page - 1);
+        else setPage(1);
+    }
+
+    const goToFirstPage = () => {
+        setPage(1);
+    }
+
+    const goToLastPage = () => {
+        setPage(maxPage);
+    }
+
+    return { characters: data?.data || [], isLoading, isError: !!error, page, maxPage, goToNextPage, goToPrevPage, goToFirstPage, goToLastPage };
 }

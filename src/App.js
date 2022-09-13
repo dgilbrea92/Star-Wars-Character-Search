@@ -4,38 +4,43 @@ import { useState } from 'react';
 
 let id = 100;
 
-const memoSearch = () => {
-  const cache = new Map();
-
-  return (searchTerm, characters = []) => {
-    const query = searchTerm.toLowerCase();
-    if (cache.has(query)) {
-      return cache.get(query);
-    }
-    const filteredList = characters.filter(character => character.homeworld.toLowerCase().search(query) !== -1 || character.name.toLowerCase().search(query) !== -1);
-    cache.set(query, filteredList);
-    return filteredList;
-  }
-}
-
 export default function App() {
-  const { characters, isLoading, isError } = useCharacterData();
+  const [filter, setFilter] = useState('name');
   const [search, setSearch] = useState('');
-  // TODO: check whether the cache is persisting correctly or resetting on every render
-  const filterChars = memoSearch();
-  const filteredList = filterChars(search, characters);
+  const { 
+    characters, 
+    isLoading, 
+    isError, 
+    page, 
+    maxPage, 
+    goToNextPage, 
+    goToPrevPage, 
+    goToFirstPage, 
+    goToLastPage 
+  } = useCharacterData(filter, search);  
+
+  const handleInput = e => {
+      setSearch(e.target.value);
+      goToFirstPage();
+  }
 
   return (
-    <div className="App" style={{ display: 'flex', flexDirection: 'column' }}>
-      {isError && <p>Failed to load character data...</p>}
-      {isLoading ? (<p>Loading character data...</p> ) : 
-        <div>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Search by name or home planet...' style={{ width: '25%', margin: '8px' }} />
-          {filteredList.map(character => (
+      <div className="App" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div onChange={e => setFilter(e.target.value)}>
+              <input type="radio" id="name" value="name" name="filter" defaultChecked /> Name
+              <input type="radio" id="homeworld" value="homeworld" name="filter"  /> Home World
+            </div>
+            <input value={search} onChange={handleInput} placeholder={filter ? `Search by ${filter}...` : 'Please select a filter type...'} style={{ width: '25%', margin: '8px' }} />
+            <button onClick={goToFirstPage} disabled={page === 1 || isLoading}>&lt;&lt;</button>
+            <button onClick={goToPrevPage} disabled={page === 1 || isLoading}>&lt;</button>
+            <button onClick={goToNextPage} disabled={page === maxPage || isLoading}>&gt;</button>
+            <button onClick={goToLastPage} disabled={page === maxPage || isLoading}>&gt;&gt;</button>
+          </div>
+          {isError && <p>Failed to load character data...</p>}
+          {isLoading ? (<p>Loading character data...</p> ) : characters.map(character => (
             <CharacterCard key={id++} name={character.name} homeworld={character.homeworld} />
           ))}
-        </div>
-      }
-    </div>
+      </div>
   );
 }
